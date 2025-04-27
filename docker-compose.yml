@@ -1,0 +1,71 @@
+version: "3"
+
+services:
+  red:
+    build:
+      context: ./red
+      dockerfile: ./Dockerfile
+
+    ports:
+      - "80"
+    networks:
+      - priv
+
+  yellow:
+    build:
+      context: ./yellow
+      dockerfile: ./Dockerfile
+
+    ports:
+      - "80"
+    networks:
+      - priv
+
+  green:
+    build:
+      context: ./green
+      dockerfile: .//Dockerfile
+
+    ports:
+      - "80"
+    networks:
+      - priv
+
+  proxy:
+    image: nginx:1.21
+    volumes:
+      - ./proxyConfs:/etc/nginx/conf.d
+
+    networks:
+      - priv
+    ports:
+      - "3000:3000"
+      - "4000:4000"
+      - "5000:5000"
+
+    links:
+      - red
+      - yellow
+      - green
+
+  balancer:
+    image: nginx:1.21
+    volumes:
+      - ./balancerConfs:/etc/nginx/conf.d
+
+    networks:
+      - priv
+    ports:
+      - "8080:80"
+
+    links:
+      - red
+      - yellow
+      - green
+
+networks:
+  priv:
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+          gateway: 172.20.0.1
